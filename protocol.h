@@ -12,6 +12,7 @@ static const char* NAME = "shared_mem"; // this file will be create under the di
 // this implementation depends on types being integer for the sake of simplicity.
 static constexpr int NUM = 640'000;
 static constexpr int SIZE = NUM * sizeof(int) * 2; // *2 for storing CHAs.
+static constexpr int CACHE_LINE_SIZE = 64;
 
 struct PagemapEntry
 {

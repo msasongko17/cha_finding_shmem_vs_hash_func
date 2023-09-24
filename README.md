@@ -1,13 +1,23 @@
 # Build
 ```
-g++ consumer.cpp -o consumer
-g++ producer.cpp -o producer
+g++ consumer.cpp -O3 -o consumer
+g++ producer.cpp -O3 -o producer
 ```
 
 # Run
+Fire up a new terminal and then issue 
+
 ```
-sudo ./producer
-sudo ./consumer 1
+sudo su
+ulimit -s unlimited
+```
+
+in order to circumvent stack size limitations.
+
+And then run with sudo privilege:
+```
+./producer
+./consumer 1
 ```
 
 Running consumer with the option "1" destroys the shared memory. After running the consumer, benchmark results comparing shmem vs hash function will be printed.

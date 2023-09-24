@@ -40,6 +40,60 @@ std::array<int, NUM> findWithHashFunc(const int *const data)
     return res;
 }
 
+template <typename T>
+std::array<int, NUM> findChasOfArray(T *arr)
+{
+    std::array<int, NUM> res;
+
+    auto addr = static_cast<T *>(&arr[0]);
+
+    // #pragma omp parallel for
+    for (int i = 0; i < NUM;)
+    {
+        addr = static_cast<T *>(&arr[i]);
+        if (addr)
+        {
+            // SPDLOG_INFO("printing the int the addr points to in order to make it page allocated! => {}", *addr);
+            // const void* addr2 = addr; /// important to do this, so that a page would be mapped for the address by OS. this is _important_ for finding cha by
+            // *addr = 0;  /// important to write to this address so that a page would be mapped for the address by OS. this is _important_ for finding cha by
+            // hashing method to not see the effects of lazy mapping. I DO NOT WANT TO WRITE IN THIS CASE!
+        }
+        else
+        {
+            //            SPDLOG_ERROR("addr is nullptr.");
+            std::exit(EXIT_FAILURE);
+        }
+
+        const int cha = findCHAByHashing(reinterpret_cast<uintptr_t>(addr), base_sequence_28_skx);
+        // const auto socket_cha = findCHAPerfCounter(reinterpret_cast<long long*>(addr));
+        // std::cout << "i: " << i << std::endl;
+        res[i] = cha;
+        ++i;
+
+        for (int j = 0; j < CACHE_LINE_SIZE / sizeof(T) - 1; ++j)
+        {
+            if (i < NUM)
+            {
+                // std::cout << "j: " << j << ", i: " << i << std::endl;
+                // auto addr = static_cast<const int *>(&arr[i]);
+                // const int cha_ = findCHAByHashing(reinterpret_cast<uintptr_t>(addr), base_sequence_18_skx);
+                // assert(cha_ == cha);
+                res[i] = cha;
+                ++i;
+            }
+            else
+            {
+                break;
+            }
+        }
+
+        //        SPDLOG_INFO("cha: {}", cha);
+        // ++addr;
+    }
+
+    return res;
+}
+
 int main(int argc, char** argv) {
     if (geteuid() != 0) {
         std::cerr << "This program must be run as root!" << std::endl;
@@ -99,11 +153,25 @@ int main(int argc, char** argv) {
         std::cout << "func arr: " << elapsed_func << " us\n";  
     }
 
+    std::array<int, NUM> func_all_arr;
+    long long elapsed_func_all = -1;
+    {
+        auto t1 = high_resolution_clock::now();
+        func_all_arr = findChasOfArray<int>(data);
+        auto t2 = high_resolution_clock::now();
+        auto ms_int = duration_cast<microseconds>(t2 - t1);
+        elapsed_func_all = ms_int.count();
+        std::cout << "func all arr: " << elapsed_func_all << " us\n";  
+    }    
+
     std::cout << "diff: " << elapsed_func / static_cast<double>(elapsed_shm) << std::endl;
+    std::cout << "diff all: " << elapsed_func_all / static_cast<double>(elapsed_shm) << std::endl;
 
     for(int i = 0; i < NUM; ++i) {
         assert(shm_arr[i] == func_arr[i]);
+        assert(shm_arr[i] == func_all_arr[i]);
     }
+    
     std::cout << "cha assert success." << std::endl;
 
 
