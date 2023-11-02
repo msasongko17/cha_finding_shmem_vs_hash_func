@@ -123,11 +123,17 @@ int main(int argc, char** argv) {
 
   printf("consumer mapped address: %p\n", data);
 
+#if 0
   for (int i = 0; i < NUM; ++i) {
     std::cout << "data[" << i << "]: " << data[i] << ", CHA of &data[" << i << "]: " << data[i + NUM] << std::endl; // read it here so that the address is mapped in so that physical address conversion does not mess up.
   }
+#endif
+  uint64_t holder;
+  for (int i = 0; i < NUM; ++i) {
+    holder += data[i];
+  }
 
-  printf("physical address: %" PRIxPTR ", cha: %d\n", getPhysicalAddress(((uintptr_t)data)), findCHAByHashing(uintptr_t(data), base_sequence_28_skx));
+  printf("physical address: %" PRIxPTR ", cha: %d, holder %ld\n", getPhysicalAddress(((uintptr_t)data)), findCHAByHashing(uintptr_t(data), base_sequence_28_skx), holder);
 
     std::cout << "now benchmarking..." << std::endl;
 
@@ -153,6 +159,7 @@ int main(int argc, char** argv) {
         std::cout << "func arr: " << elapsed_func << " us\n";  
     }
 
+#if 0
     std::array<int, NUM> func_all_arr;
     long long elapsed_func_all = -1;
     {
@@ -163,16 +170,16 @@ int main(int argc, char** argv) {
         elapsed_func_all = ms_int.count();
         std::cout << "func all arr: " << elapsed_func_all << " us\n";  
     }    
-
+#endif
     std::cout << "diff: " << elapsed_func / static_cast<double>(elapsed_shm) << std::endl;
-    std::cout << "diff all: " << elapsed_func_all / static_cast<double>(elapsed_shm) << std::endl;
+   // std::cout << "diff all: " << elapsed_func_all / static_cast<double>(elapsed_shm) << std::endl;
 
-#if 0
+//#if 0
     for(int i = 0; i < NUM; ++i) {
         assert(shm_arr[i] == func_arr[i]);
-        assert(shm_arr[i] == func_all_arr[i]);
+        //assert(shm_arr[i] == func_all_arr[i]);
     }
-#endif    
+//#endif    
 
     std::cout << "cha assert success." << std::endl;
 
